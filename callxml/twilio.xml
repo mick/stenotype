@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Record
+     transcribe="true"
+     transcribeCallback="http://dmt.im:1234/"
+     playBeep="false"
+     maxLength="20"
+     timeout="30" />
+</Response>

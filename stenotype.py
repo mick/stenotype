@@ -1,30 +1,30 @@
-ACCOUNT_SID = 'AC01cc8ba87a7eecc97c17392cd6c24c3b'
-AUTH_TOKEN = '57229c6c3d752c3a81177f92da50688c'
-CALLER_ID = '505-516-0540'
+ACCOUNT_SID = 'XXX'
+AUTH_TOKEN = 'XXX'
+CALLER_ID = '555-555-5555'
 
-from xml.dom.minidom import parse, parseString
-import simplejson as json
+
 
 from twisted.web.resource import Resource
 from twisted.web.server import NOT_DONE_YET
-from twisted.internet import defer
-from twisted.python import log
-from twisted.web import resource
-from twisted.words.xish import domish
-
-from wokkel.subprotocols import XMPPHandler
-from wokkel.xmppim import AvailablePresence, Presence
 
 import txilio
+from twisted.python import log
+from twisted.web import resource
+from twisted.words.xish import domish, xpath
+from wokkel.subprotocols import XMPPHandler
+from wokkel.xmppim import AvailablePresence, Presence
+from xml.dom.minidom import parse, parseString
+
+import simplejson as json
 
 
 NS_MUC = 'http://jabber.org/protocol/muc'
 NS_XHTML_IM = 'http://jabber.org/protocols/xhtml-im'
 NS_XHTML_W3C = 'http://www.w3.org/1999/xhtml'
 
-
 class StenoBot(XMPPHandler):
-
+    messageTypes = ["chat", "groupchat"]
+    number = ""
     def __init__(self, room, nick):
         XMPPHandler.__init__(self)
 
@@ -44,7 +44,8 @@ class StenoBot(XMPPHandler):
 
 
     def connectionInitialized(self):
-        self.xmlstream.addObserver("/message", self._onMessage)
+            self.xmlstream.addObserver("/message[@type='groupchat']", self._onMessage)
+#            self.xmlstream.addObserver("/message/x[@xmlns!='jabber:x:delay']", self._onMessage)
 
     def _onMessage(self, message):
         if message.handled:
@@ -60,12 +61,45 @@ class StenoBot(XMPPHandler):
 
         self.onMessage(message)
 
-    def onMessage(self, message):
+    def onMessage(self, msg):
         """
         Called when a message stanza was received.
         """
-        print message.body
 
+        if xpath.matches("/message/x[@xmlns='jabber:x:delay']", msg) == 1:
+            print "skip"
+            return
+        print "process"
+#        if msg.x and msg.x.uri == "jabber:x:delay":
+#            print "DELAYED "+str(msg.x) + msg.x.ur
+#        if msg.x and msg.x.hasAttribute("xmlns") and msg.x['xmlns'] == "jabber:x:delay":
+#            return
+
+        if msg["type"] == 'groupchat' and hasattr(msg, "body"):
+            print (msg.body)
+            content = str(msg.body)
+            if(content[:5].lower() == "call "):
+                number = content[5:]
+                print "GOT A NUMBER!! "+ number
+#                if number  != self.number:
+#                    self.number = number
+                data = {
+                    'Caller' : CALLER_ID,
+                    'Called' : number,
+                    'Url' : 'http://dmt.im/twilio/twilio.xml',
+                    #            'SendDigits' : '965376#1'
+                    }
+
+                account = txilio.Account(ACCOUNT_SID, AUTH_TOKEN)
+                d = account.request('Calls', 'POST', data)
+                self.notify("CALLING "+number)
+                def _done(res):
+                    print str(res)
+                    request.write(str(res))
+                    request.finish()
+
+                d.addBoth(_done)
+                return NOT_DONE_YET
 
     def notify(self, data):
         # build the messages
@@ -93,7 +127,6 @@ class StenotypeResource(Resource):
         resource.Resource.__init__(self)
         self.bot = bot
 
-    @defer.inlineCallbacks
     def render_GET(self, request):
         print 'got a get'
         #start up the listener?
@@ -106,11 +139,16 @@ class StenotypeResource(Resource):
         }
 
         account = txilio.Account(ACCOUNT_SID, AUTH_TOKEN)
-        response = yield account.request('Calls', 'POST', data)
+        d = account.request('Calls', 'POST', data)
 
-        print str(response)
-        request.write(str(response))
-        request.finish()
+        def _done(res):
+            print str(res)
+            request.write(str(res))
+            request.finish()
+
+        d.addBoth(_done)
+        return NOT_DONE_YET
+
 
     def getText(nodelist):
         rc = []

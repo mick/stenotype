@@ -1,0 +1,22 @@
+Stenotype  -- listen to a phone call, transcribe and send the transcription to a xmpp multi-user chat
+
+Dependencies: Python Twisted, twilio account
+
+Install: Download, edit stenotype.tac with xmpp config, stenotype.py with twilio config, and run with twisted
+
+
+You can also use the dialer.py script to run some twilio commands.
+
+./dialer.py [connect <number> | hangup]
+
+hangup will disconnect all calls on the twilio account.
+
+
+The name Stenotype comes from the device used by court reporters  http://en.wikipedia.org/wiki/Stenotype 
+
+
+
+You need to host the CALL XML somewhere yourself, it defines the call back url, which should be the domain + port of the twistd server.
+
+XMPP config needed all in the TAC file.
+

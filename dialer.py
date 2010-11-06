@@ -9,14 +9,11 @@ from xml.dom.minidom import parse, parseString
 API_VERSION = '2008-08-01'
 
 # Twilio AccountSid and AuthToken
-ACCOUNT_SID = 'XXXX'
-ACCOUNT_TOKEN = 'XXX'
+ACCOUNT_SID = 'AC01cc8ba87a7eecc97c17392cd6c24c3b'
+ACCOUNT_TOKEN = '57229c6c3d752c3a81177f92da50688c'
 
 # Outgoing Caller ID previously validated with Twilio
-CALLER_ID = '555555555';
-
-CALL_XML = 'http://dmt.im/twilio/twilio.xml'
-HANGUP_XML = 'http://dmt.im/twilio/hangup.xml'
+CALLER_ID = '5055160540';
 
 # Create a Twilio REST account object using your Twilio account ID and token
 account = twilio.Account(ACCOUNT_SID, ACCOUNT_TOKEN)
@@ -35,15 +32,15 @@ def connect(phone="5059206781"):
     d = {
         'Caller' : CALLER_ID,
         'Called' : phone,
-        'Url' : CALL_XML,
+        'Url' : 'http://dmt.im/twilio/twilio.xml',
 #        'SendDigits' : '965376#1'
         }
-    try:
-        print account.request('/%s/Accounts/%s/Calls' % \
-                                  (API_VERSION, ACCOUNT_SID), 'POST', d)
-    except Exception, e:
-        print e
-        print e.read()
+#    try:
+    print account.request('/%s/Accounts/%s/Calls' % \
+                              (API_VERSION, ACCOUNT_SID), 'POST', d)
+ #   except Exception, e:
+ #       print e
+ #       print e.read()
 
 
 def getText(nodelist):
@@ -70,7 +67,7 @@ def hangup():
 
 def endcall(sid):
     calls = ""
-    d = {'CurrentUrl' : HANGUP_XML}
+    d = {'CurrentUrl' : 'http://dmt.im/twilio/hangup.xml'}
     try:
         calls = account.request('/%s/Accounts/%s/Calls/%s' % \
                                   (API_VERSION, ACCOUNT_SID, sid), 'POST', d)
